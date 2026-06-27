@@ -2,8 +2,21 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Apartment Power Bill Calculator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>PowerSplit</title>
+
+<!-- PWA meta -->
+<meta name="application-name" content="PowerSplit">
+<meta name="description"      content="Split electricity bills fairly across tenants">
+<meta name="theme-color"      content="#F5A623">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable"          content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title"            content="PowerSplit">
+<link rel="manifest" href="/powersplit/manifest.json">
+<link rel="apple-touch-icon" href="/powersplit/icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/powersplit/icons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/powersplit/icons/favicon-16x16.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;1,14..32,400&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -297,7 +310,7 @@ button:active { transform:translateY(0);    filter:brightness(0.95); box-shadow:
 <div class="page-header">
   <div class="bolt">⚡</div>
   <div>
-    <h1>Power Bill Calculator</h1>
+    <h1>PowerSplit</h1>
     <p>Split electricity costs fairly across tenants</p>
   </div>
 </div>
@@ -850,6 +863,67 @@ window.onload = function() {
   if (saved) document.getElementById('unitRate').value = saved;
   autoCalcDerived();
 };
+</script>
+
+<!-- PWA: Install Banner -->
+<div id="installBanner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:999;
+  background:linear-gradient(135deg,#1a2235,#0d1420);
+  border-top:1px solid rgba(245,166,35,0.3);
+  padding:16px 20px;
+  align-items:center;gap:14px;
+  box-shadow:0 -4px 24px rgba(0,0,0,0.5);">
+  <div style="font-size:28px;flex-shrink:0;">⚡</div>
+  <div style="flex:1;">
+    <div style="font-family:var(--font-head);font-weight:700;font-size:15px;color:var(--text);">Install PowerSplit</div>
+    <div style="font-size:12px;color:var(--text-2);margin-top:1px;">Add to your home screen for quick access</div>
+  </div>
+  <button onclick="installApp()" style="background:linear-gradient(135deg,#F5A623,#D4880E);color:#0D0900;border:none;
+    border-radius:10px;padding:9px 16px;font-family:var(--font-head);font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;">
+    Install
+  </button>
+  <button onclick="dismissInstall()" style="background:transparent;border:none;color:var(--text-3);
+    font-size:20px;cursor:pointer;padding:4px 8px;flex-shrink:0;">✕</button>
+</div>
+
+<script>
+// ── SERVICE WORKER ──
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/powersplit/sw.js', { scope: '/powersplit/' })
+      .then(reg => console.log('[PWA] SW registered, scope:', reg.scope))
+      .catch(err => console.warn('[PWA] SW registration failed:', err));
+  });
+}
+
+// ── INSTALL PROMPT ──
+let deferredPrompt = null;
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  if (!sessionStorage.getItem('installDismissed')) {
+    document.getElementById('installBanner').style.display = 'flex';
+  }
+});
+
+function installApp() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(() => {
+    deferredPrompt = null;
+    document.getElementById('installBanner').style.display = 'none';
+  });
+}
+
+function dismissInstall() {
+  document.getElementById('installBanner').style.display = 'none';
+  sessionStorage.setItem('installDismissed', '1');
+}
+
+window.addEventListener('appinstalled', () => {
+  document.getElementById('installBanner').style.display = 'none';
+  deferredPrompt = null;
+});
 </script>
 </body>
 </html>
